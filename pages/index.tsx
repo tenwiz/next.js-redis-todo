@@ -7,8 +7,8 @@ import withAuth from '../hoc/withAuth'
 import { GetServerSideProps } from 'next'
 import { useAuth } from '../hooks/useAuth'
 import { Todo } from '../models/todo'
-import LoadingSpinner from './loading'
-import Item from './item'
+import LoadingSpinner from '../components/loading'
+import Item from '../components/item'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 
@@ -117,12 +117,13 @@ const Home: FC<HomeProps> = ({ items }) => {
 }
 
 export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
-  const items = (await redis.hvals('todos'))
-    .map(entry => JSON.parse(entry))
-    .sort((a, b) => a.createdAt - b.createdAt)
-    .sort((a, b) => (a.isDone && !b.isDone ? 1 : -1))
+  const items = await redis.hvals('todos')
 
-  return { props: { items } }
+  const todos =  items ? items.map(entry => JSON.parse(entry))
+    .sort((a, b) => a.createdAt - b.createdAt)
+    .sort((a, b) => (a.isDone && !b.isDone ? 1 : -1)) : []
+
+  return { props: { items: todos } }
 }
 
 export default withAuth(Home)
